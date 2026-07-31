@@ -14,11 +14,11 @@ function Features() {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-purple-950 px-4 py-16">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-5xl font-bold text-white text-center mb-3">Why choose Shortify?</h1>
-        <p className="text-gray-400 text-center mb-12">
+        <div  className="text-gray-400 text-center mt-3"><p>
           Everything Shortr gives you to shorten, manage, and track your links.
-        </p>
+        </p></div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-10 mt-14">
           {FEATURES.map((feature, i) => (
             <div key={i} className="bg-black/50 p-8 rounded-3xl border border-purple-900/40 shadow-sm hover:shadow-xl hover:shadow-purple-900/30 hover:border-purple-700/60 transition">
               <div className="w-12 h-12 bg-purple-600/20 text-purple-400 rounded-2xl flex items-center justify-center text-2xl mb-6">
