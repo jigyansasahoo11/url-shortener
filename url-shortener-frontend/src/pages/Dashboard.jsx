@@ -21,6 +21,7 @@ function Dashboard() {
 
   const [copiedId, setCopiedId] = useState(null);
   const [qrForId, setQrForId] = useState(null);
+  const [mobileActionsForId, setMobileActionsForId] = useState(null);
 
   const [analyticsForId, setAnalyticsForId] = useState(null);
   const [analyticsData, setAnalyticsData] = useState([]);
@@ -555,7 +556,8 @@ function Dashboard() {
                 <p className="text-gray-500 text-xs mt-1">{item.clicks} clicks</p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-purple-900/30">
+              {/* Desktop: sab buttons ek row me, hamesha visible */}
+              <div className="hidden md:flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-purple-900/30">
                 <button
                   onClick={() => startEdit(item)}
                   className="px-4 py-2 bg-blue-600/70 hover:bg-blue-600 text-white text-sm rounded-lg transition"
@@ -604,6 +606,79 @@ function Dashboard() {
                 >
                   Delete
                 </button>
+              </div>
+
+              {/* Mobile: "Options" toggle button — click karne pe hi actions dikhenge */}
+              <div className="md:hidden mt-4 pt-4 border-t border-purple-900/30">
+                <button
+                  onClick={() => setMobileActionsForId(mobileActionsForId === item.id ? null : item.id)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-950/40 hover:bg-purple-950/60 text-purple-300 text-sm font-medium rounded-lg transition border border-purple-900/40"
+                >
+                  {mobileActionsForId === item.id ? 'Hide options' : 'Options'}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`w-4 h-4 transition-transform ${mobileActionsForId === item.id ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {mobileActionsForId === item.id && (
+                  <div className="grid grid-cols-3 gap-2 mt-3">
+                    <button
+                      onClick={() => startEdit(item)}
+                      className="px-2 py-2.5 bg-blue-600/70 hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => handleCopy(item.short_code, item.id)}
+                      className="px-2 py-2.5 bg-purple-600/80 hover:bg-purple-600 text-white text-xs font-medium rounded-lg transition"
+                    >
+                      {copiedId === item.id ? 'Copied ✓' : 'Copy'}
+                    </button>
+
+                    <button
+                      onClick={() => setQrForId(qrForId === item.id ? null : item.id)}
+                      className="px-2 py-2.5 bg-gray-700/80 hover:bg-gray-700 text-white text-xs font-medium rounded-lg transition"
+                    >
+                      QR Code
+                    </button>
+
+                    <button
+                      onClick={() => handleShare(item.short_code)}
+                      className="px-2 py-2.5 bg-gray-700/80 hover:bg-gray-700 text-white text-xs font-medium rounded-lg transition"
+                    >
+                      Share
+                    </button>
+
+                    <button
+                      onClick={() => handleToggleAnalytics(item.id)}
+                      className="px-2 py-2.5 bg-teal-700/70 hover:bg-teal-700 text-white text-xs font-medium rounded-lg transition"
+                    >
+                      Analytics
+                    </button>
+
+                    <button
+                      onClick={() => handleToggleDetails(item.id)}
+                      className="px-2 py-2.5 bg-indigo-700/70 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg transition"
+                    >
+                      Details
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="col-span-3 px-2 py-2.5 bg-red-700/70 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
               </div>
 
               {qrForId === item.id && (
