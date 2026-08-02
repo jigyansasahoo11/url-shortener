@@ -10,7 +10,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Faq from './pages/Faq';
 import Features from './pages/Features';
-import './App.css';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
@@ -48,6 +48,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* Catch-all — koi bhi undefined route yahan aayega. Hamesha last me rakhna. */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
