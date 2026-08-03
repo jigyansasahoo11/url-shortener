@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 function NotFound() {
   return (
-    <div className="min-h-screen overflow-hidden bg-gradient-to-br from-black via-gray-950 to-purple-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-purple-950 flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center bg-black/50 border border-purple-900/40 rounded-3xl p-10 shadow-xl shadow-purple-900/20">
         <p className="text-6xl font-bold bg-gradient-to-r from-purple-500 via-fuchsia-500 to-purple-400 bg-clip-text text-transparent mb-4">
           404

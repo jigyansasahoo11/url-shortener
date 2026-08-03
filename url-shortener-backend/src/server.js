@@ -87,6 +87,64 @@ app.post('/api/login', async (req, res) => {
   });
 });
 
+// 👇 Naya route — user ke email pe password reset link bhejega
+app.post('/api/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ success: false, error: 'Email is required' });
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${FRONTEND_URL}/reset-password`,
+  });
+
+  if (error) {
+    return res.status(400).json({ success: false, error: error.message });
+  }
+
+  // 👇 Jaanbujh kar hamesha same success message bhejte hain, chahe email exist kare ya nahi —
+  // isse koi attacker ye pata nahi laga sakta ki konse emails signup hain (enumeration attack se bachata hai)
+  res.status(200).json({
+    success: true,
+    message: 'If an account exists with this email, a password reset link has been sent.',
+  });
+});
+
+// 👇 Naya route — reset link se aaye token ke saath naya password set karega
+app.post('/api/reset-password', async (req, res) => {
+  const { access_token, refresh_token, new_password } = req.body;
+
+  if (!access_token || !new_password) {
+    return res.status(400).json({ success: false, error: 'Reset link is invalid or incomplete' });
+  }
+
+  if (new_password.length < 6) {
+    return res.status(400).json({ success: false, error: 'Password must be at least 6 characters' });
+  }
+
+  // 👇 Reset link ke token se ek temporary session banate hain
+  const { error: sessionError } = await supabase.auth.setSession({
+    access_token,
+    refresh_token: refresh_token || '',
+  });
+
+  if (sessionError) {
+    return res.status(400).json({
+      success: false,
+      error: 'This reset link is invalid or has expired. Please request a new one.',
+    });
+  }
+
+  const { error: updateError } = await supabase.auth.updateUser({ password: new_password });
+
+  if (updateError) {
+    return res.status(400).json({ success: false, error: updateError.message });
+  }
+
+  res.status(200).json({ success: true, message: 'Password updated successfully!' });
+});
+
 // 👇 URL ko shorten karega — custom alias aur expiry date dono support karta hai
 app.post('/api/shorten', authMiddleware, async (req, res) => {
   const { original_url, custom_alias, expires_at } = req.body;
@@ -412,20 +470,7 @@ function renderLinkErrorPage({ title, heading, message, icon = '🔗' }) {
       color: #a1a1aa;
       font-size: 15px;
       line-height: 1.6;
-      margin-bottom: 28px;
     }
-    a.btn {
-      display: inline-block;
-      background: #9333ea;
-      color: #fff;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 14px;
-      padding: 12px 28px;
-      border-radius: 12px;
-      transition: background 0.2s;
-    }
-    a.btn:hover { background: #7e22ce; }
   </style>
 </head>
 <body>
@@ -433,7 +478,6 @@ function renderLinkErrorPage({ title, heading, message, icon = '🔗' }) {
     <div class="icon">${icon}</div>
     <h1>${heading}</h1>
     <p>${message}</p>
-    <a class="btn" href="${FRONTEND_URL}">Go to Shortr</a>
   </div>
 </body>
 </html>`;
