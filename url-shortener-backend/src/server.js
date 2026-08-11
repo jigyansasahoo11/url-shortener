@@ -11,6 +11,10 @@ const authMiddleware = require('./middleware/authMiddleware');   // ye bhi .env 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+// 👇 Ye backend ka apna public URL hai — short links isi domain pe redirect karenge.
+// Dev mein .env set nahi hai toh localhost use hoga; production mein .env mein
+// BASE_URL=https://tumhara-backend-domain.com set kar dena (deploy hote waqt).
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 app.use(cors());
 app.use(express.json());
@@ -38,7 +42,6 @@ app.get('/api/db-test', async (req, res) => {
   res.json({ success: true, message: 'Database connected!', data });
 });
 
-// 👇 Naya route — naya user account banayega
 app.post('/api/signup', async (req, res) => {
   const { email, password } = req.body;
 
@@ -62,7 +65,6 @@ app.post('/api/signup', async (req, res) => {
   });
 });
 
-// 👇 Naya route — user ko login karayega aur JWT token dega
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -87,7 +89,6 @@ app.post('/api/login', async (req, res) => {
   });
 });
 
-// 👇 Naya route — user ke email pe password reset link bhejega
 app.post('/api/forgot-password', async (req, res) => {
   const { email } = req.body;
 
@@ -103,15 +104,12 @@ app.post('/api/forgot-password', async (req, res) => {
     return res.status(400).json({ success: false, error: error.message });
   }
 
-  // 👇 Jaanbujh kar hamesha same success message bhejte hain, chahe email exist kare ya nahi —
-  // isse koi attacker ye pata nahi laga sakta ki konse emails signup hain (enumeration attack se bachata hai)
   res.status(200).json({
     success: true,
     message: 'If an account exists with this email, a password reset link has been sent.',
   });
 });
 
-// 👇 Naya route — reset link se aaye token ke saath naya password set karega
 app.post('/api/reset-password', async (req, res) => {
   const { access_token, refresh_token, new_password } = req.body;
 
@@ -123,7 +121,6 @@ app.post('/api/reset-password', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Password must be at least 6 characters' });
   }
 
-  // 👇 Reset link ke token se ek temporary session banate hain
   const { error: sessionError } = await supabase.auth.setSession({
     access_token,
     refresh_token: refresh_token || '',
@@ -145,7 +142,6 @@ app.post('/api/reset-password', async (req, res) => {
   res.status(200).json({ success: true, message: 'Password updated successfully!' });
 });
 
-// 👇 URL ko shorten karega — custom alias aur expiry date dono support karta hai
 app.post('/api/shorten', authMiddleware, async (req, res) => {
   const { original_url, custom_alias, expires_at } = req.body;
   const user_id = req.user.id;
@@ -160,8 +156,7 @@ app.post('/api/shorten', authMiddleware, async (req, res) => {
     return res.status(400).json({ success: false, error: 'Please enter a valid URL (e.g., https://example.com)' });
   }
 
-  // 👇 Expiry date optional hai. Agar user ne di hai, toh use validate karo.
-  let expiryValue = null; // default: URL kabhi expire nahi hoga
+  let expiryValue = null;
 
   if (expires_at) {
     const parsedDate = new Date(expires_at);
@@ -222,7 +217,7 @@ app.post('/api/shorten', authMiddleware, async (req, res) => {
       return res.status(200).json({
         success: true,
         data: existing,
-        short_url: `http://localhost:${PORT}/${existing.short_code}`,
+        short_url: `${BASE_URL}/${existing.short_code}`,
         message: 'This URL was already shortened before'
       });
     }
@@ -242,11 +237,10 @@ app.post('/api/shorten', authMiddleware, async (req, res) => {
   res.status(201).json({
     success: true,
     data: data[0],
-    short_url: `http://localhost:${PORT}/${short_code}`
+    short_url: `${BASE_URL}/${short_code}`
   });
 });
 
-// 👇 Naya route — sirf LOGGED-IN USER ke apne URLs dikhayega (search + pagination ke saath)
 app.get('/api/urls', authMiddleware, async (req, res) => {
   const user_id = req.user.id;
 
@@ -283,7 +277,6 @@ app.get('/api/urls', authMiddleware, async (req, res) => {
   });
 });
 
-// 👇 Naya route — ek specific URL ke clicks ko date-wise group karke bhejega
 app.get('/api/urls/:id/analytics', authMiddleware, async (req, res) => {
   const { id } = req.params;
   const user_id = req.user.id;
@@ -318,10 +311,13 @@ app.get('/api/urls/:id/analytics', authMiddleware, async (req, res) => {
     .map(([date, count]) => ({ date, count }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  res.json({ success: true, data: result });
+  const timestamps = clicks
+    .map((click) => click.clicked_at)
+    .sort((a, b) => new Date(b) - new Date(a));
+
+  res.json({ success: true, data: result, timestamps });
 });
 
-// 👇 Naya route — kisi URL ka original_url update karega
 app.put('/api/urls/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { original_url, short_code, expires_at } = req.body;
@@ -337,7 +333,6 @@ app.put('/api/urls/:id', authMiddleware, async (req, res) => {
     return res.status(400).json({ success: false, error: 'Please enter a valid URL' });
   }
 
-  // 👇 Expiry date optional hai. Khali bhej ke bhi expiry hata sakte hain.
   let expiryValue = null;
 
   if (expires_at) {
@@ -356,7 +351,6 @@ app.put('/api/urls/:id', authMiddleware, async (req, res) => {
 
   const updatePayload = { original_url, expires_at: expiryValue };
 
-  // 👇 Short code (alias) bhi update karne diya, agar user ne change kiya ho
   if (short_code) {
     const aliasPattern = /^[a-zA-Z0-9-]+$/;
     if (!aliasPattern.test(short_code)) {
@@ -405,7 +399,6 @@ app.put('/api/urls/:id', authMiddleware, async (req, res) => {
   res.json({ success: true, data: data[0] });
 });
 
-// 👇 Naya route — kisi URL ko delete karega
 app.delete('/api/urls/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
   const user_id = req.user.id;
@@ -428,7 +421,6 @@ app.delete('/api/urls/:id', authMiddleware, async (req, res) => {
   res.json({ success: true, message: 'URL deleted successfully' });
 });
 
-// 👇 Ek helper — expired ya not-found link ke liye sundar HTML page banata hai
 function renderLinkErrorPage({ title, heading, message, icon = '🔗' }) {
   return `
 <!DOCTYPE html>
@@ -483,7 +475,6 @@ function renderLinkErrorPage({ title, heading, message, icon = '🔗' }) {
 </html>`;
 }
 
-// 👇 Redirect route — short code se original URL pe le jaayega, aur click record karega
 app.get('/:short_code', async (req, res) => {
   const { short_code } = req.params;
 
@@ -504,7 +495,6 @@ app.get('/:short_code', async (req, res) => {
     );
   }
 
-  // 👇 Naya check — agar expiry date set hai aur wo beet chuki hai, toh redirect mat karo
   if (data.expires_at && new Date(data.expires_at) < new Date()) {
     const formattedDate = new Date(data.expires_at).toLocaleDateString('en-GB', {
       day: 'numeric',

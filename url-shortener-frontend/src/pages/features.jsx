@@ -13,7 +13,7 @@ function Features() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-purple-950 px-4 py-16">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-5xl font-bold text-white text-center mb-3">Why choose Shortify?</h1>
+        <h1 className="text-5xl font-bold text-white text-center mb-3">Why choose Shortr?</h1>
         <div  className="text-gray-400 text-center mt-3"><p>
           Everything Shortr gives you to shorten, manage, and track your links.
         </p></div>
