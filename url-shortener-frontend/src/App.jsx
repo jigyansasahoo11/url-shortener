@@ -1,18 +1,18 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './context/AuthContext';
-import Navbar from './components/Navbar';
-import ProtectedRoute from './components/ProtectedRoute';
-import Home from './pages/Home';
-import Signup from './pages/Signup';
-import Login from './pages/Login';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import Dashboard from './pages/Dashboard';
-import Faq from './pages/Faq';
-import Features from './pages/Features';
-import NotFound from './pages/NotFound';
+import { AuthProvider } from './context/AuthContext.jsx';
+import Navbar from './components/Navbar.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
+import Home from './pages/Home.jsx';
+import Signup from './pages/Signup.jsx';
+import Login from './pages/Login.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import Faq from './pages/Faq.jsx';
+import Features from './pages/Features.jsx';
+import NotFound from './pages/NotFound.jsx';
 
 function App() {
   return (
